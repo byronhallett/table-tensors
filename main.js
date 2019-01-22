@@ -37,7 +37,29 @@ const scoreCard = createScoreCard()
 var gameState = {}
 
 function resetGameState() {
-  gameState = require("./initial_state.json").gameState
+  gameState = {
+    ball: {
+      position: {
+        x: 0.5,
+        y: 0.5
+      },
+      velocity: {
+        x: 0.003,
+        y: 0.01
+      },
+      speed: 0.01
+    },
+    p1: {
+      input: 0.5,
+      position: 0.5,
+      score: 0
+    },
+    p2: {
+      position: 0.5,
+      input: 0.5,
+      score: 0
+    }
+  }
 }
 
 function startGame() {
