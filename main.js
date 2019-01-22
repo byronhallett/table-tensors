@@ -90,6 +90,7 @@ function startGame() {
   }
   // set up update loop
   app.ticker.add(Update)
+  // app.ticker.FPS = 60
   // Set up mouse listener
   app.stage.interactive = true
   app.stage.on("pointermove", handleMouse)
