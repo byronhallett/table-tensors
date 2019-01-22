@@ -5,6 +5,6 @@
     "pixi.js": "^4.8.5"
   },
   "scripts": {
-    "start": "./node_modules/.bin/http-server 1111"
+    "start": "./node_modules/.bin/http-server -p 1111"
   }
 }
