@@ -33,55 +33,15 @@ const p2 = createPaddle()
 const ball = createBall()
 const scoreCard = createScoreCard()
 
-/**
- * @typedef {Object} Player
- * @property {number} position
- * @property {number} input
- * @property {number} score
- */
-
-/**
-* @typedef {Object} Ball
-* @property {PIXI.Point} position
-* @property {PIXI.Point} velocity
-* @property {number} speed
-* @property {number} acceleration
-
- */
-/**
- * @typedef {Object} state
- * @property {Ball} ball
- * @property {Player} p1
- * @property {Player} p2
- */
-/** @type state */
+/** @type {State} */
 var gameState = {}
 
+function resetGameState() {
+  gameState = require("./initial_state.json").gameState
+}
+
 function startGame() {
-  gameState = {
-    ball: {
-      position: {
-        x: 0.5,
-        y: 0.5
-      },
-      velocity: {
-        x: -0.003,
-        y: 0.01,
-      },
-      speed: 0.01,
-      acceleration: 0.01,
-    },
-    p1: {
-      input: 0.5,
-      position: 0.5,
-      score: 0,
-    },
-    p2: {
-      position: 0.5,
-      input: 0.5,
-      score: 0,
-    }
-  }
+  resetGameState()
   // Config styles etc
   app.renderer.backgroundColor = COLOR.TEAL
   scoreCard.position = {
@@ -96,9 +56,6 @@ function startGame() {
   app.stage.on("pointermove", handleMouse)
 }
 
-/**
- * @returns {PIXI.Graphics}
- */
 function createPaddle() {
   const paddle = new PIXI.Graphics();
   app.stage.addChild(paddle)
@@ -107,9 +64,6 @@ function createPaddle() {
   return paddle
 }
 
-/**
- * @returns {PIXI.Graphics}
- */
 function createBall() {
   const ball = new PIXI.Graphics();
   app.stage.addChild(ball)
@@ -134,7 +88,12 @@ function createScoreCard() {
   return card
 }
 
-
+/**
+ *
+ * @param {number} input
+ * @param {number} pos
+ * @param {number} deltaTime
+ */
 function newPosition(input, pos, deltaTime) {
   const diff = input - pos
   const speed = PHYSICS.PADDLE_SPEED * deltaTime
@@ -144,19 +103,21 @@ function newPosition(input, pos, deltaTime) {
   return Math.min(Math.max(newPos, 0), 1)
 }
 
+/**
+ *
+ * @param {PIXI.Graphics} paddle
+ */
 function score(paddle) {
   if (paddle === p1) {
     gameState.p2.score += 1
   } else {
     gameState.p1.score += 1
   }
+  oldDirection = Math.sign(gameState.ball.velocity.x)
   // reset ball
-  gameState.ball = {
-    acceleration: 0.01,
-    position: {x: 0.5, y: 0.5},
-    speed: 0.01,
-    velocity: {x: -0.003*Math.sign(gameState.ball.velocity.x), y: 0.01}
-  }
+  resetGameState()
+  // Change ball direction
+  gameState.ball.velocity.x *= -oldDirection
 }
 
 function reflect(ballGlobal, paddleGlobal) {
@@ -168,6 +129,7 @@ function reflect(ballGlobal, paddleGlobal) {
  * @param {Ball} ball
  * @param {PIXI.Graphics} paddle
  */
+// TODO
 function scoreOrReflect(ball, paddle) {
   const ballGlobal = ball.position
   const paddleGlobal = paddle.position
@@ -178,8 +140,11 @@ function scoreOrReflect(ball, paddle) {
   }
 }
 
+/**
+ *
+ * @param {number} deltaTime
+ */
 function Update(deltaTime) {
-
   // Move players according to their input
   gameState.p1.position = newPosition(
     gameState.p1.input, gameState.p1.position, deltaTime)
