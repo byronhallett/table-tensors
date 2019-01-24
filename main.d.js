@@ -13,6 +13,7 @@
 
 /**
  * @typedef Ball
+ * @property {boolean} active
  * @property {Point} position
  * @property {Point} velocity
  * @property {number} speed
