@@ -135,7 +135,7 @@ function score(paddle) {
   } else {
     gameState.p1.score += 1
   }
-  oldDirection = Math.sign(gameState.ball.velocity.x)
+  const oldDirection = Math.sign(gameState.ball.velocity.x)
   // reset ball
   resetGameState()
   // Change ball direction
