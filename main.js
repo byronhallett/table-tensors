@@ -6,6 +6,7 @@ document.body.appendChild(app.view);
 const COLOR = Object.freeze({
   MAUVE: 0xae7178,
   TEAL: 0x71aea7,
+  WHITE: 0xFFFFFF,
 })
 const SCREEN = Object.freeze({
   HEIGHT: app.renderer.height,
@@ -26,6 +27,10 @@ const DIMENSIONS = Object.freeze({
     WIDTH: SCREEN.WIDTH,
     HEIGHT: SCREEN.HEIGHT,
   },
+  GRAPH: {
+    WIDTH: SCREEN.WIDTH * 0.4,
+    HEIGHT: SCREEN.HEIGHT * 0.3,
+  },
   BALL: {
     RADIUS: SCREEN.WIDTH / 48,
   }
@@ -34,6 +39,7 @@ const DIMENSIONS = Object.freeze({
 // GAME OBJECTS
 // Set up some primitives for the objects
 const field = createField()
+const graph = createGraph()
 const p1 = createPaddle()
 const p2 = createPaddle()
 const ball = createBall()
@@ -42,6 +48,9 @@ const hintText = createText()
 
 /** @type {State} */
 var gameState = {}
+
+/** @type {State} */
+var lastPrediction = {}
 
 function resetBall() {
   gameState.ball = {
@@ -115,6 +124,19 @@ function createField() {
   return field
 }
 
+function createGraph() {
+  const graph = new PIXI.Graphics();
+  app.stage.addChild(graph)
+  graph.beginFill(COLOR.WHITE)
+  graph.alpha = 0.15
+  graph.drawRect(
+    (DIMENSIONS.FIELD.WIDTH - DIMENSIONS.GRAPH.WIDTH) / 2,
+    DIMENSIONS.FIELD.HEIGHT - DIMENSIONS.GRAPH.HEIGHT,
+    DIMENSIONS.GRAPH.WIDTH,
+    DIMENSIONS.GRAPH.HEIGHT)
+  return graph
+}
+
 function createBall() {
   const ball = new PIXI.Graphics();
   app.stage.addChild(ball)
@@ -163,6 +185,7 @@ function score(paddle) {
     gameState.p2.score += 1
   } else {
     gameState.p1.score += 1
+    doLearn(p2)
   }
   const oldDirection = Math.sign(gameState.ball.velocity.x)
   // reset ball
@@ -263,9 +286,12 @@ function serveBall() {
  * @param {PIXI.Graphics} playerPaddle
  */
 function hitBall(playerPaddle) {
+  // Get the center of the ball minus the center of the paddle
   const vector = {
-    x: ball.position.x - playerPaddle.position.x,
-    y: ball.position.y - (playerPaddle.position.y + DIMENSIONS.PADDLE.HEIGHT / 2),
+    x: ball.position.x -
+      (playerPaddle.position.x + DIMENSIONS.PADDLE.WIDTH / 2),
+    y: ball.position.y -
+      (playerPaddle.position.y + DIMENSIONS.PADDLE.HEIGHT / 2),
   }
   // Enforce the paddle hitting directiont o avoid clipping
   if (playerPaddle == p1 && vector.x < 0) {
@@ -282,6 +308,26 @@ function hitBall(playerPaddle) {
     y: normVector.y * gameState.ball.speed,
   }
   gameState.ball.speed += 0.002
+  doLearn(playerPaddle)
+}
+
+/**
+ *
+ * @param {PIXI.Graphics} paddle
+ */
+function doLearn(paddle) {
+  // Now predict the resultant Y position
+  if (paddle == p1) {
+    // Copy the game state at the moment of the p1 hit for training
+    lastPrediction = {player: gameState.p1.position, ball: gameState.ball.position.y}
+    const yPos = predict(gameState.p1.position, gameState.ball.position.y)
+    // Send the bot there exactly
+    // TODO, add some spin
+    gameState.p2.input = Math.min(Math.max(yPos, 0), 1)
+  } else {
+    // recall the last player hit for training
+    train(lastPrediction.player, lastPrediction.ball, gameState.ball.position.y)
+  }
 }
 
 /**
