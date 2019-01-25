@@ -25,3 +25,9 @@
  * @property {Player} p1
  * @property {Player} p2
  */
+
+ /**
+  * @typedef Input
+  * @property {number} player
+  * @property {number} ball
+  */

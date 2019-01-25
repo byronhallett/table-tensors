@@ -49,7 +49,7 @@ const hintText = createText()
 /** @type {State} */
 var gameState = {}
 
-/** @type {State} */
+/** @type {Input} */
 var lastPrediction = {}
 
 function resetBall() {
@@ -319,10 +319,10 @@ function doLearn(paddle) {
   // Now predict the resultant Y position
   if (paddle == p1) {
     // Copy the game state at the moment of the p1 hit for training
-    lastPrediction = {player: gameState.p1.position, ball: gameState.ball.position.y}
-    const yPos = predict(gameState.p1.position, gameState.ball.position.y)
+    lastPrediction.player = gameState.p1.position
+    lastPrediction.ball = gameState.ball.position.y
+    const yPos = predict(lastPrediction.player, lastPrediction.ball)
     // Send the bot there exactly
-    // TODO, add some spin
     gameState.p2.input = Math.min(Math.max(yPos, 0), 1)
   } else {
     // recall the last player hit for training
