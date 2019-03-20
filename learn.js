@@ -1,26 +1,43 @@
+
 // ActivationIdentifier = 'elu' | 'hardSigmoid' | 'linear' | 'relu' | 'relu6' | 'selu' | 'sigmoid' | 'softmax' | 'softplus' | 'softsign' | 'tanh' | string;
 // export declare type InitializerIdentifier = 'constant' | 'glorotNormal' | 'glorotUniform' | 'heNormal' | 'identity' | 'leCunNormal' | 'ones' | 'orthogonal' | 'randomNormal' | 'randomUniform' | 'truncatedNormal' | 'varianceScaling' | 'zeros' | string;
 
-const sequence = tf.sequential();
+const sequence = tf.sequential()
 
 function init() {
+  // INPUT AND 1st HIDDEN LAYER
   sequence.add(tf.layers.dense({
-    units: 4,
+    units: 100,
     // kernelInitializer: tf.initializers.randomUniform({minval: 0.0, maxval: 1.0}),
     batchInputShape: [1, 2],
     useBias: false,
   }));
+  // 2nd HIDDEN LAYER
+  sequence.add(tf.layers.dense({
+    units: 100,
+    useBias: false,
+  }))
+  // 3rd HIDDEN LAYER
+  sequence.add(tf.layers.dense({
+    units: 100,
+    useBias: false,
+  }))
+  // OUTPUT LAYER
   sequence.add(tf.layers.dense({
     units: 1,
-    // kernelInitializer: tf.initializers.randomUniform({minval: 0.0, maxval: 1.0}),
     useBias: false,
   }))
   sequence.compile({
-    loss: tf.losses.absoluteDifference,
-    optimizer: tf.train.sgd(0.02),
+    loss: tf.losses.meanSquaredError,
+    optimizer: tf.train.sgd(0.1),
   });
   sequence.summary()
-  train(0.5, 0.5, 0.5)
+  for (let i = 0; i < 100; i++) {
+    const r = 1/100 * i
+    train(r, r, r)
+
+  }
+  // train(0.5, 0.5, 0.5)
   printWeights()
 }
 
