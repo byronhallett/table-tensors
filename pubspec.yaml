@@ -1,0 +1,9 @@
+name: ML_pong
+dependencies:
+  js: ^0.6.1
+  pixi: 4.8.1+1
+dev_dependencies:
+  webdev: ^1.0.1
+  build_runner: ^1.1.2
+  build_test: ^0.10.2
+  build_web_compilers: ^1.0.0
