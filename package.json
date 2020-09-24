@@ -1,10 +1,13 @@
 {
   "dependencies": {
-    "@tensorflow/tfjs": "^0.14.2",
-    "http-server": "^0.11.1",
-    "pixi.js": "^4.8.5"
+    "@tensorflow/tfjs": "^2.4.0",
+    "pixi.js": "^5.3.3"
   },
   "scripts": {
-    "start": "./node_modules/.bin/http-server -p 1111"
+    "start": "parcel serve src/index.html -p 1111"
+  },
+  "devDependencies": {
+    "parcel": "^1.12.4",
+    "typescript": "^4.0.3"
   }
 }
