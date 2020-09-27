@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
-import { COLOR, DIMENSIONS, PHYSICS, SCREEN } from "./constants";
 import { predict, train } from "./learn";
+import { gameState } from "./state";
 // CREATE APP
 const app = new PIXI.Application();
 document.body.appendChild(app.view);
@@ -48,55 +48,30 @@ const p2 = createPaddle();
 const ball = createBall();
 const scoreCard = createText();
 const hintText = createText();
-
-var gameState: State;
-var lastHit: Input = {};
+const w0Text = createText();
+const w1Text = createText();
 
 function resetBall() {
-  gameState.ball = {
-    active: false,
-    position: {
-      x: 0.01,
-      y: 0.5,
-    },
-    velocity: {
-      x: 0,
-      y: 0,
-    },
-    speed: 0.01,
-  };
-}
-
-function initGameState() {
-  gameState = {
-    p1: {
-      input: 0.5,
-      position: 0.5,
-      score: 0,
-    },
-    p2: {
-      position: 0.5,
-      input: 0.5,
-      score: 0,
-    },
-    ball: null,
-    reflections: { count: 0 },
-  };
-  resetBall();
+  gameState.resetBall();
 }
 
 function startGame() {
-  initGameState();
   // Config styles etc
   // app.renderer.backgroundColor = COLOR.TEAL
   scoreCard.position.x = SCREEN.WIDTH / 2;
   scoreCard.position.y = SCREEN.MARGIN;
 
-  hintText.anchor.x = 0.5;
   hintText.anchor.y = 0.5;
+  hintText.position.x = SCREEN.WIDTH / 2;
+  hintText.position.y = SCREEN.HEIGHT / 2;
 
-  (hintText.position.x = SCREEN.WIDTH / 2),
-    (hintText.position.y = SCREEN.HEIGHT / 2);
+  w0Text.anchor.y = 1.0;
+  w0Text.position.x = SCREEN.WIDTH / 3;
+  w0Text.position.y = SCREEN.HEIGHT;
+
+  w1Text.anchor.y = 1.0;
+  w1Text.position.x = (2 * SCREEN.WIDTH) / 3;
+  w1Text.position.y = SCREEN.HEIGHT;
 
   // set up update loop
   app.ticker.add(Update);
@@ -146,26 +121,20 @@ function createBall() {
 }
 
 function createText() {
-  const card = new PIXI.Text("", {
+  const text = new PIXI.Text("", {
     fontFamily: "Arial",
     fontSize: SCREEN.HEIGHT / 12,
     fill: COLOR.MAUVE,
     align: "center",
   });
-  card.anchor.x = 0.5;
-  card.anchor.y = 0;
+  text.anchor.x = 0.5;
+  text.anchor.y = 0;
 
-  app.stage.addChild(card);
-  return card;
+  app.stage.addChild(text);
+  return text;
 }
 
-/**
- *
- * @param {number} input
- * @param {number} pos
- * @param {number} deltaTime
- */
-function newPosition(input, pos, deltaTime) {
+function newPosition(input: number, pos: number, deltaTime: number) {
   const diff = input - pos;
   const speed = PHYSICS.PADDLE_SPEED * deltaTime;
   const movement = Math.min(Math.abs(diff), speed) * Math.sign(diff);
@@ -174,11 +143,7 @@ function newPosition(input, pos, deltaTime) {
   return Math.min(Math.max(newPos, 0), 1);
 }
 
-/**
- *
- * @param {PIXI.Graphics} paddle
- */
-function score(paddle) {
+function score(paddle: PIXI.Graphics) {
   if (paddle === p1) {
     gameState.p2.score += 1;
   } else {
@@ -192,12 +157,7 @@ function score(paddle) {
   gameState.ball.velocity.x *= -oldDirection;
 }
 
-/**
- *
- * @param {PIXI.Graphics} ball
- * @param {PIXI.Graphics} paddle
- */
-function scoreOrReflect(ball, paddle) {
+function scoreOrReflect(ball: PIXI.Graphics, paddle: PIXI.Graphics) {
   const ballGlobal = ball.position.y;
   const paddleGlobal = paddle.position.y + DIMENSIONS.PADDLE.HEIGHT / 2;
   if (Math.abs(ballGlobal - paddleGlobal) > DIMENSIONS.PADDLE.HEIGHT / 2) {
@@ -207,11 +167,7 @@ function scoreOrReflect(ball, paddle) {
   }
 }
 
-/**
- *
- * @param {number} deltaTime
- */
-function Update(deltaTime) {
+function Update(deltaTime: number) {
   // Move players according to their input
   gameState.p1.position = newPosition(
     gameState.p1.input,
@@ -275,12 +231,15 @@ function Update(deltaTime) {
     (SCREEN.WIDTH - xOffset * 2) * gameState.ball.position.x + xOffset,
     (SCREEN.HEIGHT - yOffset * 2) * gameState.ball.position.y + yOffset
   );
+  // Set label values
   scoreCard.text = `${gameState.p1.score} | ${gameState.p2.score}`;
   if (!gameState.ball.active) {
     hintText.text = "Click to serve";
   } else {
     hintText.text = "";
   }
+  w0Text.text = `w0 = ${gameState.displayWeights.w0.toFixed(1)}`;
+  w1Text.text = `w1 = ${gameState.displayWeights.w1.toFixed(1)}`;
 }
 
 function serveBall() {
@@ -288,11 +247,7 @@ function serveBall() {
   hitBall(p1);
 }
 
-/**
- *
- * @param {PIXI.Graphics} playerPaddle
- */
-function hitBall(playerPaddle) {
+function hitBall(playerPaddle: PIXI.Graphics) {
   // Get the center of the ball minus the center of the paddle
   const vector = {
     x:
@@ -321,26 +276,21 @@ function hitBall(playerPaddle) {
   gameState.reflections = { count: 0 };
 }
 
-/**
- *
- * @param {PIXI.Graphics} paddle
- */
-function doLearn(paddle) {
+function doLearn(paddle: PIXI.Graphics) {
   // Now predict the resultant Y position
   if (paddle == p1) {
     // Copy the game state at the moment of the p1 hit for training
-    lastHit.player = gameState.p1.position;
-    lastHit.ball = gameState.ball.position.y;
-    const yPos = predict(lastHit.player, lastHit.ball);
+    gameState.lastHit.player = gameState.p1.position;
+    gameState.lastHit.ball = gameState.ball.position.y;
+    const yPos = predict(gameState.lastHit.player, gameState.lastHit.ball);
     // yPOS needs to be normalised to field
     const adjustedY = normaliseY(yPos);
-    // console.log("adjusted: ", adjustedY);
     gameState.p2.input = Math.min(Math.max(adjustedY, 0), 1);
   } else {
     // recall the last player hit for training
     // also compute the out-of-bounds position of the ball based on reflections
     const theoreticalY = accountForReflections(gameState.ball.position.y);
-    train(lastHit.player, lastHit.ball, theoreticalY);
+    train(gameState.lastHit.player, gameState.lastHit.ball, theoreticalY);
   }
 }
 
@@ -366,12 +316,7 @@ function accountForReflections(yPos: number) {
   return isUp ? -result : result;
 }
 
-/**
- *
- * @param {Point} vector
- * @return {Point}
- */
-function normalise(vector) {
+function normalise(vector: Point): Point {
   const norm = Math.sqrt(Math.pow(vector.x, 2) + Math.pow(vector.y, 2)) || 1;
   return {
     x: vector.x / norm,
@@ -379,22 +324,14 @@ function normalise(vector) {
   };
 }
 
-/**
- *
- * @param {PIXI.interaction.InteractionEvent} event
- */
-function handleMouse(event) {
+function handleMouse(event: PIXI.InteractionEvent) {
   const newY =
     (event.data.global.y - DIMENSIONS.PADDLE.HEIGHT / 2) /
     (SCREEN.HEIGHT - DIMENSIONS.PADDLE.HEIGHT);
   gameState.p1.input = newY;
 }
 
-/**
- *
- * @param {PIXI.interaction.InteractionEvent} event
- */
-function handleClick(event) {
+function handleClick(event: PIXI.InteractionEvent) {
   if (!gameState.ball.active) {
     serveBall();
   }

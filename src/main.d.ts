@@ -1,4 +1,4 @@
-declare var tf: typeof import("@tensorflow/tfjs");
+// declare var tf: typeof import("@tensorflow/tfjs");
 
 interface Point {
   x: number;
@@ -18,15 +18,15 @@ interface Ball {
   speed: number;
 }
 
-interface State {
-  ball: Ball;
-  p1: Player;
-  p2: Player;
-  reflections: {
-    count: number;
-    firstDirection?: "up" | "down";
-  };
-}
+// interface State {
+//   ball: Ball;
+//   p1: Player;
+//   p2: Player;
+//   reflections: {
+//     count: number;
+//     firstDirection?: "up" | "down";
+//   };
+// }
 
 interface Input {
   player?: number;
