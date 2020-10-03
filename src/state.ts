@@ -1,3 +1,5 @@
+import { Ball, Input, Player } from "./types";
+
 class State {
   ball: Ball;
   p1: Player;
@@ -11,6 +13,7 @@ class State {
     w0: number;
     w1: number;
   };
+  fullscreen: boolean = false;
 
   resetBall() {
     this.ball = {

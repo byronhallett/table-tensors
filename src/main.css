@@ -3,3 +3,11 @@ body {
   display: flex;
   justify-content: center;
 }
+
+.fullscreen {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  bottom: 12px;
+  right: 12px;
+}

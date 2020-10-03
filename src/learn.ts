@@ -6,11 +6,12 @@ import { gameState } from "./state";
 const sequence = tf.sequential({
   layers: [
     tf.layers.dense({
-      units: 10,
+      units: 1,
       kernelInitializer: tf.initializers.randomNormal({
         mean: 1.0,
         stddev: 0.3,
       }),
+      activation: "tanh",
       batchInputShape: [1, 2],
       useBias: false,
     }),
@@ -26,8 +27,8 @@ const sequence = tf.sequential({
   ],
 });
 sequence.compile({
-  loss: tf.losses.meanSquaredError,
-  optimizer: tf.train.adam(0.4),
+  loss: tf.losses.absoluteDifference,
+  optimizer: tf.train.adam(0.5),
 });
 
 sequence.summary();
